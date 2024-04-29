@@ -9,7 +9,14 @@ from django.db import transaction
 # Create your views here.
 
 class SearchNews(APIView):
-    def get(self, request,keyword):
+    def get(self, request):
+        related_keywords = ["Autism spectrum disorder (asd)","Asperger's syndrome"]
+        countries = ["Albania","Afghanistan"]        
+        for related_keyword in related_keywords:
+            for country in countries:
+                keyword = related_keyword+' '+ country
+                print("keyword from view : ",keyword)
+                print(f'\n Fetching News articles for- {keyword} news\n')
         # keyword=request.GET.get('keyword')
         # print(keyword)
         # if not keyword:
@@ -17,8 +24,8 @@ class SearchNews(APIView):
         # Scrape tweets using the keyword
         # keyword=request.GET.get('keyword')
         # print (keyword)
-        scraped_news = google_news_scraper(keyword) 
-        print (scraped_news)
+                scraped_news = google_news_scraper(keyword) 
+                #print (scraped_news)
         if scraped_news is None:
             return Response("Failed to scrape news", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         

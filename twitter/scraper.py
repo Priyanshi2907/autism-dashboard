@@ -40,6 +40,7 @@ def twitter_search(keyword):
     '''
     Searches for the Tweets with certain keyword  
     '''
+    print("for ",keyword)
     url = "https://twitter154.p.rapidapi.com/search/search"
     
     today = datetime.today()
@@ -56,10 +57,10 @@ def twitter_search(keyword):
         "language": "en"
     }
     
-    headers = {	
-        'X-RapidAPI-Key': 'f7173b49d5msh09de40987862b60p194beajsn834236db5d67',
-        'X-RapidAPI-Host': 'twitter154.p.rapidapi.com'
-    }
+    headers = {
+    'X-RapidAPI-Key': '6b4e137a0dmshdfe171472b83b03p1dba21jsncf717056731c',
+    'X-RapidAPI-Host': 'twitter154.p.rapidapi.com'
+  }
     
     try:
         response = requests.get(url, headers=headers, params=querystring)
@@ -91,8 +92,8 @@ def twitter_search(keyword):
                 hashtags_count[i] += 1
             else:
                 hashtags_count[i] = 1
-        print(hashtags_count)
-        print (df)
+        print("hashtag_count : ",hashtags_count)
+        print ("df",df)
         return df, hashtags_count
     
         
@@ -101,8 +102,8 @@ def twitter_search(keyword):
     except requests.exceptions.RequestException as e:
         print("Error:", e)
         return None  # Return None to indicate failure
-    
-df, hashtags_count = twitter_search('health')
+# for related_keyword in related_keywords:     
+#     df, hashtags_count = twitter_search(related_keyword)
 
 # def getresponse():
 #     keyword=input("Enter keyword : ")

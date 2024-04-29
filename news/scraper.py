@@ -269,7 +269,7 @@ def google_news_scraper(keyword):
     df['sentiment'] = df['description'].apply(sentiment)
     keyCountry=keyword.split()
     df['country']=keyCountry[-1]
-    #print(df)
+    print(df)
     return df
 
 
@@ -338,32 +338,32 @@ def sentiment(text):
         print(e)
         return 'No Response'
     
-def right_relevance():
+# def right_relevance():
 
-    main_df = pd.DataFrame()
+#     main_df = pd.DataFrame()
 
-    for related_keyword in related_keywords:
-        for country in countries:
-            keyword = related_keyword+' '+ country
-            #print(keyword)
-            print(f'\n Fetching News articles for- {keyword} news\n')
-            df = google_news_scraper(keyword)
-            #print("sentiments")
-            df['sentiment'] = df['description'].apply(sentiment)
-            # print(df)
-            df['country']=country
-            #print(df)
+#     for related_keyword in related_keywords:
+#         for country in countries:
+#             keyword = related_keyword+' '+ country
+#             #print(keyword)
+#             print(f'\n Fetching News articles for- {keyword} news\n')
+#             df = google_news_scraper(keyword)
+#             #print("sentiments")
+#             df['sentiment'] = df['description'].apply(sentiment)
+#             # print(df)
+#             df['country']=country
+#             #print(df)
             
-            main_df=pd.concat([main_df,df],axis=0)
-    main_df.reset_index(drop=True,inplace=True)
-    return main_df
+#             main_df=pd.concat([main_df,df],axis=0)
+#     main_df.reset_index(drop=True,inplace=True)
+#     return main_df
 
     
     
     # print(df)
     # return df
 
-df=right_relevance()
+# df=right_relevance()
 #df
 # keyword = input('Enter the Keyword: ')
 
