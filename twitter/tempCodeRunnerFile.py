@@ -1,0 +1,1 @@
+print(hashtags_count)
