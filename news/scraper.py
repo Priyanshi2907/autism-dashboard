@@ -12,6 +12,8 @@ from langdetect import detect
 from datetime import datetime, timedelta, date
 import pandas as pd
 import google.generativeai as genai
+from collections import defaultdict
+
 
 
 # Example DataFrame\n",
@@ -82,6 +84,28 @@ related_keywords = [
     # 'Social Skills Training'
     ]
 
+def sentiment(text):
+    """
+    Fetches Sentiment from the given text
+    """
+    try:
+
+        response = model.generate_content(f"""
+  
+            You are a helpful assistant that can analyze the text and analyze Sentiment 
+            
+            Understand and Identify the Sentiment for the following text: {text}
+            
+            Output should contain only 'Positive' , 'Negative' or 'Neutral'.
+            
+            """)
+
+        return response.text
+    
+    # except:
+    except Exception as e:
+        print(e)
+        return 'No Response'
     
 # This fuction takes a URL as input and returns a news link from Google News. 
 # It uses the requests and BeautifulSoup modules to extract the link.
@@ -119,8 +143,12 @@ def find_news_data(url):
             link = i.find('a')['href'].replace('/url?q=','')
             title = i.find('h3').text
             description = i.find('div', {'class': 'BNeawe s3v9rd AP7Wnd'}).text
-            date=i.find('span', {'class':'r0bn4c rQMQod'}).text
-
+            date_element = i.find('span', {'class': 'r0bn4c rQMQod'})
+            if date_element:
+                date = date_element.text
+                des['date'] = date
+            else:
+                des['date'] = None
             final_link = link.split('&')[0]
             
             # news = requests.get(final_link)
@@ -135,7 +163,7 @@ def find_news_data(url):
             des['source']=source
             des['link']=final_link
             des['title']=title
-            des['date']=date
+           # des['date']=date
             des['description'] = description
 
             # des['image_link'] = image_link
@@ -151,7 +179,8 @@ def find_news_data(url):
             URL1='https://www.google.com/'+next_link
             page=requests.get(URL1,timeout=20)
             print(URL1)
-        except:
+        except Exception as e:
+            print("Error:", e)
             break        
     return final_list,soup11
     # time.sleep(1)
@@ -191,14 +220,21 @@ def get_page_title(url):
 
 
 
-def google_news_scraper(keyword):
+def google_news_scraper(keyword,start_date, end_date):
     print("Keyyyywordd is this:",keyword)
     
-    
+    ##Country wise Calculation
+    # Initialize dictionary to store counts for each country
+    country_counts = defaultdict(lambda: {'positive': 0, 'negative': 0})
+
+
+
     # It constructs a Google search URL by concatenating the keyword and industry category, 
     # and then it passes this URL to the find_news_data function to scrape the news data from the Google search results page.
-    
-    URL = 'https://www.google.com/search?q='+str(keyword) +' '+'news'
+    start_date_str = start_date.strftime("%Y-%m-%d")
+    end_date_str = end_date.strftime("%Y-%m-%d")
+
+    URL = f'https://www.google.com/search?q={keyword}+news&tbm=nws&source=lnt&tbs=cdr%3A1%2Ccd_min%3A{start_date_str}%2Ccd_max%3A{end_date_str}'
     # print(URL)
     
     y=[]
@@ -209,12 +245,35 @@ def google_news_scraper(keyword):
     config.browser_user_agent = user_agent
     print("*"*50)                  
     # print(data)
+   
+    for item in data:
+         #sentiment = get_sentiment(item['description'])
+        sentiments = sentiment(item['description'])
+        
+        
+        # Extract country from the news data
+        keyCountry=keyword.split()
+        countryname = keyCountry[-1]
+        
+         # Update counts based on sentiment
+        if sentiments == 'Positive':
+            country_counts[countryname]['positive'] += 1
+        elif sentiments == 'Negative':
+            country_counts[countryname]['negative'] += 1
+      # Print country-wise counts
+    for countryname, counts in country_counts.items():
+        print(f"Country: {countryname}")
+        print(f"Positive News Count: {counts['positive']}")
+        print(f"Negative News Count: {counts['positive']}")
+        print("Total Count : ",counts['positive']+counts['positive'])
+        print()
 
 
     # The code then processes the scraped news data by extracting the date of each article and filtering out any articles that 
     # are not from the previous day. 
     DATE = []
     for i in data:
+        date=None
         if i['date']:
             date = dateparser.parse(i['date'])
         if date:
@@ -246,19 +305,19 @@ def google_news_scraper(keyword):
         #     item['title'] = headlines(item['link'])       
 
     # Removes news of the given title
-    list1 = [x for x in list1 if isinstance(x, dict) and x.get('title') is not None and ('Error' not in x['title']) and ('Captcha' not in x['title']) and
-             ('Are you a robot?' not in x['title']) and ('Untitled Page' not in x['title']) and 
-             ('Subscribe' not in x['title']) and ('You are being redirected...' not in x['title']) and 
-             ('Not Acceptable!' not in x['title']) and ('403 Forbidden' not in x['title']) and 
-             ('ERROR: The request could not be satisfied' not in x['title']) and ('Just a moment...' not in x['title']) and 
-             ('403 - Forbidden: Access is denied.' not in x['title']) and ('Not Found' not in x['title']) and 
-             ('Page Not Found' not in x['title']) and ('StackPath' not in x['title']) and ('Access denied' not in x['title'])
-             and ('Yahoo' not in x['title']) and ('Stock Market Insights' not in x['title']) and 
-             ('Attention Required!' not in x['title']) and ('Access Denied' not in x['title'])
-             and ('403 forbidden' not in x['title']) and ('Too Many Requests' not in x['title'])
-             and ('403 not available now' not in x['title']) and ('Not Acceptable' not in x['title']) 
-             and ('Your access to this site has been limited by the site owner' not in x['title'])
-             and ('404 - File or directory not found.' not in x['title'])]
+    # list1 = [x for x in list1 if isinstance(x, dict) and x.get('title') is not None and ('Error' not in x['title']) and ('Captcha' not in x['title']) and
+    #          ('Are you a robot?' not in x['title']) and ('Untitled Page' not in x['title']) and 
+    #          ('Subscribe' not in x['title']) and ('You are being redirected...' not in x['title']) and 
+    #          ('Not Acceptable!' not in x['title']) and ('403 Forbidden' not in x['title']) and 
+    #          ('ERROR: The request could not be satisfied' not in x['title']) and ('Just a moment...' not in x['title']) and 
+    #          ('403 - Forbidden: Access is denied.' not in x['title']) and ('Not Found' not in x['title']) and 
+    #          ('Page Not Found' not in x['title']) and ('StackPath' not in x['title']) and ('Access denied' not in x['title'])
+    #          and ('Yahoo' not in x['title']) and ('Stock Market Insights' not in x['title']) and 
+    #          ('Attention Required!' not in x['title']) and ('Access Denied' not in x['title'])
+    #          and ('403 forbidden' not in x['title']) and ('Too Many Requests' not in x['title'])
+    #          and ('403 not available now' not in x['title']) and ('Not Acceptable' not in x['title']) 
+    #          and ('Your access to this site has been limited by the site owner' not in x['title'])
+    #          and ('404 - File or directory not found.' not in x['title'])]
 
     
 
@@ -315,28 +374,7 @@ model = genai.GenerativeModel(
 
 
         
-def sentiment(text):
-    """
-    Fetches Sentiment from the given text
-    """
-    try:
 
-        response = model.generate_content(f"""
-  
-            You are a helpful assistant that can analyze the text and analyze Sentiment 
-            
-            Understand and Identify the Sentiment for the following text: {text}
-            
-            Output should contain only 'Positive' , 'Negative' or 'Neutral'.
-            
-            """)
-
-        return response.text
-    
-    # except:
-    except Exception as e:
-        print(e)
-        return 'No Response'
     
 # def right_relevance():
 
@@ -350,9 +388,10 @@ def sentiment(text):
 #             df = google_news_scraper(keyword)
 #             #print("sentiments")
 #             df['sentiment'] = df['description'].apply(sentiment)
+               
 #             # print(df)
 #             df['country']=country
-#             #print(df)
+#             
             
 #             main_df=pd.concat([main_df,df],axis=0)
 #     main_df.reset_index(drop=True,inplace=True)
@@ -369,4 +408,24 @@ def sentiment(text):
 
     # country = input('Kindly enter the country to access articles relevant to its region: ')
     
+# def count_sentiment():
+#     # Filter the data for the current month
+#     current_month = datetime.now().strftime("%Y-%m")
+#     df_current_month = df[df["date"].str.contains(current_month)]
     
+#     # Apply sentiment analysis to the text of each news article
+#     df_current_month["sentiment"] = df_current_month["text"].apply(sentiment)
+    
+#     # Check the type of the sentiment data
+#     print(type(df_current_month["sentiment"]))
+    
+#     # If the sentiment data is a string, access its characters using integer indices
+#     if isinstance(df_current_month["sentiment"], str):
+#         positive_count = sum(1 for sentiment in df_current_month["sentiment"] if sentiment[0] == "p")
+#         negative_count = sum(1 for sentiment in df_current_month["sentiment"] if sentiment[0] == "n")
+    
+#     print(f"Positive news count: {positive_count}")
+#     print(f"Negative news count: {negative_count}")
+
+
+# count_sentiment()

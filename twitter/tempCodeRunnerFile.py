@@ -1,1 +1,0 @@
-print(hashtags_count)

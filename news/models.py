@@ -5,7 +5,7 @@ class News(models.Model):
     source=models.CharField(max_length=100,blank=True, null=True)
     link=models.URLField(blank=True, null=True)
     title=models.TextField(null=True,blank=True)
-    date=models.CharField(max_length=100)
+    date=models.CharField(max_length=100,null=True,blank=True)
     description=models.TextField(null=True,blank=True)
     modified_dates=models.DateField(null=True,blank=True)
     sentiment=models.CharField(max_length=100 , blank = True, null = True) 

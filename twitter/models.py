@@ -14,6 +14,11 @@ class tweet(models.Model):
     lang=models.CharField(max_length=40,blank=True, null=True)
     reach=models.IntegerField(blank=True, null=True)  #Reach is no. of people seen your tweet
     hashtags=models.CharField(max_length=500 ,blank=True, null=True)   #Comma separated list of Hashtags in the Tweet
+    country=models.CharField(max_length=100,blank=True, null=True)
+    sentiment=models.CharField(max_length=100,blank=True, null=True)
+    entity=models.CharField(max_length=100,blank=True, null=True)
+    name=models.CharField(max_length=500 ,blank=True, null=True)
+    user_profile_link=models.URLField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.tweet_id} - {self.text[:50]}"  # Return a truncated version of the tweet text
@@ -33,6 +38,11 @@ class tweet(models.Model):
             "lang": self.lang,
             "reach": self.reach,
             "hashtags": self.hashtags,
+            "country": self.country,
+            'sentiment':self.sentiment,
+            'entity':self.entity,
+            "name": self.name,
+            "user_profile_link": self.user_profile_link
             
 
         }
