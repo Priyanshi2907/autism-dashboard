@@ -84,14 +84,14 @@ def count_hashtag_combinations(hashtags_list):
     return Counter(pairs)
 df['hashtag_combinations'] = df['hashtags'].apply(count_hashtag_combinations)
 
-#print(df)
+print(df)
 
 total_combined_counter = sum(df['hashtag_combinations'], Counter())
 
 individual_counters = [Counter({pair: count}) for pair, count in total_combined_counter.items()]
 
-# for counter in individual_counters:
-#     print(counter)
+for counter in individual_counters:
+    print(counter)
 
 # Apply the function to the 'hashtags' column
 # df['hashtag_combinations'] = df['hashtags'].apply(count_hashtag_pairs)
@@ -156,7 +156,7 @@ def sentiment(text):
     except Exception as e:
         print(e)
         return 'No Response'
-def twitter_search(keyword):
+def twitter_search(keyword,start_date,end_date):
     
     
             
@@ -171,7 +171,7 @@ def twitter_search(keyword):
     yesterday = yesterday.strftime('%Y-%m-%d')
     
     # Increment the end_date by one day to include tweets for that day
-    #end_date = end_date + timedelta(days=1)
+    end_date = end_date + timedelta(days=1)
 
     querystring = {
         "query": keyword,
@@ -179,7 +179,8 @@ def twitter_search(keyword):
         "min_retweets": "1",
         "min_likes": "1",
         "limit": "20",
-        "start_date": yesterday,
+        "start_date": start_date.strftime('%Y-%m-%d'),
+        "end_date": end_date.strftime('%Y-%m-%d'),
         "language": "en"
     }
     
@@ -386,31 +387,31 @@ def count_sentiment(tweets):
             negative_count += 1
     return positive_count, negative_count
 
-def main():
-    main_df = pd.DataFrame()
+# def main():
+#     main_df = pd.DataFrame()
    
-    for related_keyword in related_keywords:
+#     for related_keyword in related_keywords:
     
-        for country in countries:        
+#         for country in countries:        
     
-            keyword = related_keyword + ' ' + country
+#             keyword = related_keyword + ' ' + country
   
-            print("keyword in main : ",keyword)
-            output = twitter_search(keyword)
-            #if output is not None:
-             #   filtered_tweets = filter_tweets_by_month(output)
-              #  positive_count, negative_count = count_sentiment(filtered_tweets)
-               # print("Total positive tweets for current month:", positive_count)
-                #print("Total negative tweets for current month:", negative_count)
+#             print("keyword in main : ",keyword)
+#             output = twitter_search(keyword)
+#             if output is not None:
+#                 filtered_tweets = filter_tweets_by_month(output)
+#                 positive_count, negative_count = count_sentiment(filtered_tweets)
+#                 print("Total positive tweets for current month:", positive_count)
+#                 print("Total negative tweets for current month:", negative_count)
 
-            #print("main df : ",output)
+#             #print("main df : ",output)
         
-        # if not df.empty:
-        # df['country'] = country
+#         # if not df.empty:
+#         # df['country'] = country
             
-        # main_df = pd.concat([main_df, df], axis=0)
+#         # main_df = pd.concat([main_df, df], axis=0)
         
-    main_df.reset_index(drop=True, inplace=True)      
+#     main_df.reset_index(drop=True, inplace=True)      
 
-    main_df
-#main()
+#     main_df
+# main()

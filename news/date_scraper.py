@@ -17,13 +17,13 @@ from collections import defaultdict
 
 
 # Example DataFrame\n",
-# df = pd.DataFrame({'A': [1, 2, 3]})#, 'B': [4, 5, 6]})\n",
-# # Reset index,
-# df.reset_index(drop=True, inplace=True)
-# # Print DataFrame without indices and without the default integer index column\n",
-# df = df.to_string(index=False)
+df = pd.DataFrame({'A': [1, 2, 3]})#, 'B': [4, 5, 6]})\n",
+# Reset index,
+df.reset_index(drop=True, inplace=True)
+# Print DataFrame without indices and without the default integer index column\n",
+df = df.to_string(index=False)
 
-# print(df)
+print(df)
 # Pass your Gemini API key here 
 GOOGLE_API_KEY= 'AIzaSyAEgGg08BmZIDyxOiCVeRlibO9OTOLxTMs'
 
@@ -31,9 +31,7 @@ GOOGLE_API_KEY= 'AIzaSyAEgGg08BmZIDyxOiCVeRlibO9OTOLxTMs'
 # list of countries
     
 countries = [
-         "Afghanistan"]
-         #,"Albania"
-         #"Algeria",
+         "Afghanistan","Albania"]#"Algeria",]
         #"Andorra","Angola","Antigua and Barbuda","Argentina","Armenia",
         # "Australia","Austria","Azerbaijan","Bahamas, The","Bahrain","Bangladesh","Barbados","Belarus","Belgium",
         # "Belize", "Benin","Bhutan", "Bolivia", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi",
@@ -56,7 +54,7 @@ countries = [
 #list of keywords
 related_keywords = [
     "Asperger's syndrome",
-    #"Autism spectrum disorder (asd)"
+    "Autism spectrum disorder (asd)"
     #"Neurodevelopmental disorder",
     # "Social communication",
     # "Sensory processing",
@@ -149,13 +147,12 @@ def find_news_data(url):
             link = i.find('a')['href'].replace('/url?q=','')
             title = i.find('h3').text
             description = i.find('div', {'class': 'BNeawe s3v9rd AP7Wnd'}).text
-            date=i.find('span', {'class':'r0bn4c rQMQod'}).text
-
-            # if date_element:
-            #     date = date_element.text
-            #     des['date'] = date
-            # else:
-            #     des['date'] = None
+            date_element = i.find('span', {'class': 'r0bn4c rQMQod'})
+            if date_element:
+                date = date_element.text
+                des['date'] = date
+            else:
+                des['date'] = None
             final_link = link.split('&')[0]
             
             # news = requests.get(final_link)
@@ -170,7 +167,7 @@ def find_news_data(url):
             des['source']=source
             des['link']=final_link
             des['title']=title
-            des['date']=date
+           # des['date']=date
             des['description'] = description
 
             # des['image_link'] = image_link
@@ -227,7 +224,7 @@ def get_page_title(url):
 
 
 
-def google_news_scraper(keyword):
+def google_news_scraper(keyword,start_date, end_date):
     print("Keyyyywordd is this:",keyword)
     
     ##Country wise Calculation
@@ -238,10 +235,10 @@ def google_news_scraper(keyword):
 
     # It constructs a Google search URL by concatenating the keyword and industry category, 
     # and then it passes this URL to the find_news_data function to scrape the news data from the Google search results page.
-    # start_date_str = start_date.strftime("%Y-%m-%d")
-    # end_date_str = end_date.strftime("%Y-%m-%d")
+    start_date_str = start_date.strftime("%Y-%m-%d")
+    end_date_str = end_date.strftime("%Y-%m-%d")
 
-    URL = 'https://www.google.com/search?q='+str(keyword) +' '+'news'    
+    URL = f'https://www.google.com/search?q={keyword}+news&tbm=nws&source=lnt&tbs=cdr%3A1%2Ccd_min%3A{start_date_str}%2Ccd_max%3A{end_date_str}'
     # print(URL)
     
     y=[]
@@ -280,7 +277,7 @@ def google_news_scraper(keyword):
     # are not from the previous day. 
     DATE = []
     for i in data:
-       
+        date=None
         if i['date']:
             date = dateparser.parse(i['date'])
         if date:
@@ -383,26 +380,56 @@ model = genai.GenerativeModel(
         
 
     
-def right_relevance():
+# def right_relevance():
 
-    main_df = pd.DataFrame()
+#     main_df = pd.DataFrame()
 
-    for related_keyword in related_keywords:
-        for country in countries:
-            keyword = related_keyword+' '+ country
-            #print(keyword)
-            print(f'\n Fetching News articles for- {keyword} news\n')
-            df = google_news_scraper(keyword)
-            #print("sentiments")
-            #df['sentiment'] = df['description'].apply(sentiment)
+#     for related_keyword in related_keywords:
+#         for country in countries:
+#             keyword = related_keyword+' '+ country
+#             #print(keyword)
+#             print(f'\n Fetching News articles for- {keyword} news\n')
+#             df = google_news_scraper(keyword)
+#             #print("sentiments")
+#             df['sentiment'] = df['description'].apply(sentiment)
                
-            print(df)
-            #df['country']=country
+#             # print(df)
+#             df['country']=country
+#             
             
-            
-            main_df=pd.concat([main_df,df],axis=0)
-    main_df.reset_index(drop=True,inplace=True)
-    return main_df
+#             main_df=pd.concat([main_df,df],axis=0)
+#     main_df.reset_index(drop=True,inplace=True)
+#     return main_df
+
+    
+    
+    # print(df)
+    # return df
+
+# df=right_relevance()
+#df
+# keyword = input('Enter the Keyword: ')
+
+    # country = input('Kindly enter the country to access articles relevant to its region: ')
+    
+# def count_sentiment():
+#     # Filter the data for the current month
+#     current_month = datetime.now().strftime("%Y-%m")
+#     df_current_month = df[df["date"].str.contains(current_month)]
+    
+#     # Apply sentiment analysis to the text of each news article
+#     df_current_month["sentiment"] = df_current_month["text"].apply(sentiment)
+    
+#     # Check the type of the sentiment data
+#     print(type(df_current_month["sentiment"]))
+    
+#     # If the sentiment data is a string, access its characters using integer indices
+#     if isinstance(df_current_month["sentiment"], str):
+#         positive_count = sum(1 for sentiment in df_current_month["sentiment"] if sentiment[0] == "p")
+#         negative_count = sum(1 for sentiment in df_current_month["sentiment"] if sentiment[0] == "n")
+    
+#     print(f"Positive news count: {positive_count}")
+#     print(f"Negative news count: {negative_count}")
 
 
-#right_relevance()
+# count_sentiment()
