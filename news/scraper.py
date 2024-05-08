@@ -151,11 +151,6 @@ def find_news_data(url):
             description = i.find('div', {'class': 'BNeawe s3v9rd AP7Wnd'}).text
             date=i.find('span', {'class':'r0bn4c rQMQod'}).text
 
-            # if date_element:
-            #     date = date_element.text
-            #     des['date'] = date
-            # else:
-            #     des['date'] = None
             final_link = link.split('&')[0]
             
             # news = requests.get(final_link)

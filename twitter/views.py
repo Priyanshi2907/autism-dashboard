@@ -4,9 +4,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import tweet
-from .serializers import TweetSerializers
+from .serializers import TweetSerializers,ReachSerializer,RealTimeTweetSerializer
 from datetime import datetime, timedelta
-
+from rest_framework.decorators import api_view
+import itertools
 from .date_scraper import twitter_search  # Import your scraping function
 from . scraper import *
 
@@ -110,7 +111,7 @@ class SearchTweets(APIView):
             # "Inclusion", 'Autism Spectrum Disorder', 'Pervasive Developmental Disorder','Autism Support', 'Autistic Children', 
             # 'Special Needs', 'Developmental Disability', 'Learning Disability','Sensory Processing Disorder','Social Skills Training'
         ]
-        countries = ["Afganistan","Albania"]
+        countries = ["india","Afghanistan","Albania"]
         saved_tweets = []
         for related_keyword in related_keywords:
             for country in countries:
@@ -156,6 +157,94 @@ class SearchTweets(APIView):
         # Serialize the saved tweets
         serializer = TweetSerializers(saved_tweets, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)    
+
+class NameByReach(APIView): 
+    def get(self, *args,**kwargs):
+        entity=self.request.query_params.get('entity')
+        country=self.request.query_params.get('country',None)
+        start_date=self.request.query_params.get('start_date',None)
+        end_date=self.request.query_params.get('end_date',None)
+
+        if start_date:
+            start_date=datetime.strptime(start_date,"%Y-%m-%d").date()
+        if end_date:
+            end_date=datetime.strptime(end_date,"%Y-%m-%d").date()
+
+        if entity:
+            queryset=tweet.objects.filter(entity=entity)
+        if country:
+            queryset=queryset.filter(country=country)
+        if start_date and end_date:
+            queryset=queryset.filter(created_at__range=[start_date,end_date])
+        
+        queryset=queryset.order_by('-reach')
+
+        serializers=ReachSerializer(queryset,many=True)
+
+        return Response(serializers.data)
+    
+class RealTimeTweet(APIView):
+    def get(self, *args,**kwargs):
+        sentiment=self.request.query_params.get('sentiment')
+        country=self.request.query_params.get('country',None)
+        start_date=self.request.query_params.get('start_date',None)
+        end_date=self.request.query_params.get('end_date',None)
+
+        if start_date:
+            start_date=datetime.strptime(start_date,"%Y-%m-%d").date()
+        if end_date:
+            end_date=datetime.strptime(end_date,"%Y-%m-%d").date()
+
+        if sentiment:
+            queryset=tweet.objects.filter(sentiment=sentiment)
+        if country:
+            queryset=queryset.filter(country=country)
+        if start_date and end_date:
+            queryset=queryset.filter(created_at__range=[start_date,end_date])
+        
+        
+
+        serializers=RealTimeTweetSerializer(queryset,many=True)
+
+        return Response(serializers.data)
+
+@api_view(['GET'])
+def hashtag_pairs(request):
+    country = request.query_params.get('country', None)
+    start_date = request.query_params.get('start_date', None)
+    end_date = request.query_params.get('end_date', None)
+
+    # Parse start and end dates if provided
+    if start_date:
+        start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+    if end_date:
+        end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+    # Filter tweets based on parameters
+    queryset = tweet.objects.all()
+
+    if country:
+        queryset = queryset.filter(country=country)
+
+    if start_date and end_date:
+        queryset = queryset.filter(created_at__range=[start_date, end_date])
+
+    # Extract hashtags from tweets and generate pairs
+    hashtag_combinations = Counter()
+    for t in queryset:
+        hashtags = t.hashtags
+        pairs = itertools.combinations(sorted(hashtags), 2)
+        hashtag_combinations.update(pairs)
+    
+    # Convert tuple keys to concatenated strings
+    hashtag_combinations_str_keys = {f"{tag1} {tag2}": count for (tag1, tag2), count in hashtag_combinations.items()}
+
+    return Response(hashtag_combinations_str_keys)
+
+
+
+
+        
 
 
     # user_followers_count = scraped_tweets['user_followers_count'].iloc[i]

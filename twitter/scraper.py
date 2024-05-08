@@ -124,15 +124,15 @@ def NER(text):
     entities = []
     for ent in doc.ents:
         if ent.label_ == "ORG":
-            entities.append("ORG")
+            entities.append("org")
         elif ent.label_ == "PERSON":
-            entities.append("PERSON")
+            entities.append("person")
         
     if entities:
         print("In ner :",entities[0])
         return entities[0]
     else:
-        return "ALL"
+        return "all"
 
 def sentiment(text):
     """
@@ -286,27 +286,7 @@ def twitter_search(keyword):
     
     print ("df",type(df))
     #print(df)
-    # Iterate over the DataFrame containing tweet data
-    for index, tweet in df.iterrows():
-        country = tweet['country']
-        sentiments = tweet['sentiment']
-
-        # Increment positive count for the country if sentiment is positive
-        if sentiments == 'Positive':
-            country_positive_counts[country] = country_positive_counts.get(country, 0) + 1
-
-        # Increment negative count for the country if sentiment is negative
-        elif sentiments == 'Negative':
-            country_negative_counts[country] = country_negative_counts.get(country, 0) + 1
-    # Calculate total counts of positive and negative tweets for each country
-    country_total_counts = {country: country_positive_counts.get(country, 0) + country_negative_counts.get(country, 0)
-                            for country in set(country_positive_counts) | set(country_negative_counts)}
-
-
-    # Print or return the counts for each country
-    print("Country-wise counts of positive tweets: ",country_positive_counts)
-    print("Country-wise counts of negative tweets: ",country_negative_counts)
-    print("Total Count: ",country_total_counts)
+    
 
     
     return df #hashtags_count
@@ -359,32 +339,6 @@ model = genai.GenerativeModel(
     safety_settings=safety_settings
 )
 
-
-        
-
-# Function to filter tweets by the current month
-def filter_tweets_by_month(tweets):
-    current_month = datetime.now().month
-    print("----",type(current_month))
-    filtered_tweets = []
-    for tweet in tweets:
-        tweet_month=datetime.strptime(tweet['created_at'], '%Y-%m-%d').month
-        print("***",type(tweet_month))
-        if tweet_month == current_month:
-            filtered_tweets.append(tweet)
-            print("Tweet created in the current month. Month:", tweet_month)
-    return filtered_tweets
-# Function to count positive and negative tweets
-def count_sentiment(tweets):
-    positive_count = 0
-    negative_count = 0
-    for tweet in tweets:
-        sent = sentiment(tweet['text'])
-        if "positive" in sent.lower():
-            positive_count += 1
-        elif "negative" in sent.lower():
-            negative_count += 1
-    return positive_count, negative_count
 
 def main():
     main_df = pd.DataFrame()
