@@ -116,7 +116,7 @@ class SentimentStatistics(APIView):
         total_sentiment_count_current_month = news_sentiment_count_current_month + tweet_sentiment_count_current_month
 
         # Calculate absolute change
-        absolute_change = abs(total_sentiment_count_prev_month - total_sentiment_count_current_month)
+        absolute_change = (total_sentiment_count_current_month-total_sentiment_count_prev_month)
 
         # Calculate percentage change
         if total_sentiment_count_prev_month == 0:
@@ -186,7 +186,7 @@ class CountryWiseCount(APIView):
         
 class LineChart(APIView):
     def get(self, request):
-        country = request.query_params.get('country', None)
+        countries = request.query_params.getlist('country')  # Get list of countries
         sentiment = request.query_params.get('sentiment', None)
         start_date_str = request.query_params.get('start_date', None)
         end_date_str = request.query_params.get('end_date', None)
@@ -204,54 +204,97 @@ class LineChart(APIView):
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
 
-        # Filter news and tweets based on provided parameters
-        news_queryset = News.objects.filter(modified_dates__range=(start_date, end_date))
-        tweet_queryset = tweet.objects.filter(created_at__range=(start_date, end_date))
-
-        if country:
-            news_queryset = news_queryset.filter(country=country)
-            tweet_queryset = tweet_queryset.filter(country=country)
-
-        if sentiment:
-            news_queryset = news_queryset.filter(sentiment=sentiment)
-            tweet_queryset = tweet_queryset.filter(sentiment=sentiment)
-
-        # Group news and tweets by date and count them
-        news_counts_by_date = news_queryset.values('modified_dates').annotate(news_count=Count('id'))
-        tweet_counts_by_date = tweet_queryset.values('created_at').annotate(tweet_count=Count('id'))
-
-        # Merge news and tweet counts by date
-        counts_by_date = {}
-        for item in news_counts_by_date:
-            date = item['modified_dates']
-            counts_by_date[date] = {'news_count': item['news_count'], 'tweet_count': 0}
-        for item in tweet_counts_by_date:
-            date = item['created_at']
-            if date in counts_by_date:
-                counts_by_date[date]['tweet_count'] = item['tweet_count']
-            else:
-                counts_by_date[date] = {'news_count': 0, 'tweet_count': item['tweet_count']}
-
-        # Calculate total count for each date
-        for date, counts in counts_by_date.items():
-            counts['total_count'] = counts['news_count'] + counts['tweet_count']
-
-        # Construct the response
+        # Initialize response data
         response_data = []
-        for date, counts in counts_by_date.items():
-            data = {
-                "date": date,
-                "news_count": counts['news_count'],
-                "tweet_count": counts['tweet_count'],
-                "total_count": counts['total_count']
-            }
-            if country and sentiment:
-                data["country"] = country
-                data["sentiment"] = sentiment
-            response_data.append(data)
+
+        if countries:
+            for country in countries:
+                # Filter news and tweets based on provided parameters and country
+                news_queryset = News.objects.filter(modified_dates__range=(start_date, end_date))
+                tweet_queryset = tweet.objects.filter(created_at__range=(start_date, end_date))
+
+                if sentiment:
+                    news_queryset = news_queryset.filter(sentiment=sentiment)
+                    tweet_queryset = tweet_queryset.filter(sentiment=sentiment)
+
+                # Filter by country
+                news_queryset = news_queryset.filter(country=country)
+                tweet_queryset = tweet_queryset.filter(country=country)
+
+                # Group news and tweets by date and count them
+                news_counts_by_date = news_queryset.values('modified_dates').annotate(news_count=Count('id'))
+                tweet_counts_by_date = tweet_queryset.values('created_at').annotate(tweet_count=Count('id'))
+
+                # Merge news and tweet counts by date
+                counts_by_date = {}
+                for item in news_counts_by_date:
+                    date = item['modified_dates']
+                    counts_by_date[date] = {'news_count': item['news_count'], 'tweet_count': 0}
+                for item in tweet_counts_by_date:
+                    date = item['created_at']
+                    if date in counts_by_date:
+                        counts_by_date[date]['tweet_count'] = item['tweet_count']
+                    else:
+                        counts_by_date[date] = {'news_count': 0, 'tweet_count': item['tweet_count']}
+
+                # Calculate total count for each date
+                for date, counts in counts_by_date.items():
+                    counts['total_count'] = counts['news_count'] + counts['tweet_count']
+
+                # Append country-specific data to response
+                for date, counts in counts_by_date.items():
+                    data = {
+                        "country": country,
+                        "date": date,
+                        "news_count": counts['news_count'],
+                        "tweet_count": counts['tweet_count'],
+                        "total_count": counts['total_count']
+                    }
+                    if sentiment:
+                        data["sentiment"] = sentiment
+                    response_data.append(data)
+        else:
+            # Filter news and tweets based on provided parameters only (no country filter)
+            news_queryset = News.objects.filter(modified_dates__range=(start_date, end_date))
+            tweet_queryset = tweet.objects.filter(created_at__range=(start_date, end_date))
+
+            if sentiment:
+                news_queryset = news_queryset.filter(sentiment=sentiment)
+                tweet_queryset = tweet_queryset.filter(sentiment=sentiment)
+
+            # Group news and tweets by date and count them
+            news_counts_by_date = news_queryset.values('modified_dates').annotate(news_count=Count('id'))
+            tweet_counts_by_date = tweet_queryset.values('created_at').annotate(tweet_count=Count('id'))
+
+            # Merge news and tweet counts by date
+            counts_by_date = {}
+            for item in news_counts_by_date:
+                date = item['modified_dates']
+                counts_by_date[date] = {'news_count': item['news_count'], 'tweet_count': 0}
+            for item in tweet_counts_by_date:
+                date = item['created_at']
+                if date in counts_by_date:
+                    counts_by_date[date]['tweet_count'] = item['tweet_count']
+                else:
+                    counts_by_date[date] = {'news_count': 0, 'tweet_count': item['tweet_count']}
+
+            # Calculate total count for each date
+            for date, counts in counts_by_date.items():
+                counts['total_count'] = counts['news_count'] + counts['tweet_count']
+
+            # Append data to response
+            for date, counts in counts_by_date.items():
+                data = {
+                    "date": date,
+                    "news_count": counts['news_count'],
+                    "tweet_count": counts['tweet_count'],
+                    "total_count": counts['total_count']
+                }
+                if sentiment:
+                    data["sentiment"] = sentiment
+                response_data.append(data)
 
         return Response(response_data, status=status.HTTP_200_OK)
-
 
 
 

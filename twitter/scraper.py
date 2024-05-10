@@ -124,9 +124,9 @@ def NER(text):
     doc = nlp(text)
     entities = []
     for ent in doc.ents:
-        if ent.label_ == "ORG":
+        if ent.label_.lower() == "org":
             entities.append("org")
-        elif ent.label_ == "PERSON":
+        elif ent.label_.lower()== "person":
             entities.append("person")
         
     if entities:
@@ -214,7 +214,9 @@ def twitter_search(keyword):
             "favorite_count": tweet.get('favorite_count', 0), 
             "lang": tweet['language'],
             "username": tweet['user']['name']
-            } for tweet in response.json()['results'] ]
+            } for tweet in response.json()['results'] 
+            if all(tweet.get(key) for key in ['tweet_id', 'text', 'creation_date', 'expanded_url', 'user'])
+            ]
 
     except Exception as e:
         data_2 = [{
@@ -230,7 +232,9 @@ def twitter_search(keyword):
             "favorite_count": tweet.get('favorite_count', 0), 
             "lang": tweet['language'],
             "username": tweet['user']['username'],
-            } for tweet in response.json()['results']]
+            } for tweet in response.json()['results']
+            if all(tweet.get(key) for key in ['tweet_id', 'text', 'creation_date', 'expanded_url', 'user'])
+        ]
     
     df = pd.DataFrame(data_2)
     print("i am comming here")

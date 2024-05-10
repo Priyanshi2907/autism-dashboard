@@ -11,6 +11,7 @@ import itertools
 from .date_scraper import twitter_search  # Import your scraping function
 from . scraper import *
 import ast
+from langdetect import detect,LangDetectException
 
 class PostTweets(APIView):
     def get(self, request):
@@ -234,29 +235,68 @@ def hashtag_pairs(request):
     if start_date and end_date:
         queryset = queryset.filter(created_at__range=[start_date, end_date])
    
+    # Function to check if a string contains only English characters
+    def is_english(text):
+        return bool(re.match(r'^[a-zA-Z0-9_]+$', text))
+
     # Extract hashtags from filtered tweets
     hashtags = []
 
     for tweet_obj in queryset:
         tweet_hashtags = tweet_obj.hashtags
-        tweet_hashtags=ast.literal_eval(tweet_hashtags)
-        # print(type(tweet_hashtags))
-        # print(tweet_hashtags)
-        if  len(tweet_hashtags)>0:
-            hashtags.append(tweet_hashtags)
-        #print(hashtags)
+        if tweet_hashtags:
+            try:
+                tweet_hashtags=ast.literal_eval(tweet_hashtags)
+                if tweet_hashtags and len(tweet_hashtags)>0:
+                    # Check if the tweet's language is English
+                        print(tweet_hashtags)
+                        print(tweet_obj.text)
+                        if all(is_english(hashtag.strip('#')) for hashtag in tweet_hashtags):
+                            hashtags.append(tweet_hashtags)
+            except (SyntaxError,ValueError):
+                pass
+
+    # Filter out non-English hashtags
+    # english_hashtags = []
+
+    # for hashtags_list in hashtags:
+    #     for hashtag in hashtags_list:
+    #         try:
+    #             if detect(hashtag) == 'en':
+    #                 english_hashtags.append(hashtag)
+    #         except:
+    #             pass  
+    # Construct output format
+    #data = {'hashtags': hashtags}
+     # Flatten the list of hashtags
+    print("i m here")
     # Construct output format
     data = {'hashtags': hashtags}
     pair_counts = Counter()
 
-    for hashtags_list in data['hashtags']:
-        pairs = combinations(hashtags_list, 2)
+    # Iterate over combinations of hashtags and count pairs
+    for hash in data['hashtags']:
+        pairs=combinations(hash,2)
         pair_counts.update(pairs)
+        # print(pairs)
+        # for i in pairs:
+        #     if (detect(i)=="en"):
+        #         pair_counts.update(pairs)
+    # for hashtags_list in combinations(hashtags, 2):
+    #     print(hashtags_list)
+    #     if all(detect(hashtag) == 'en' for hashtag in hashtags_list):
+    #         pair_counts.update([tuple(sorted(hashtags_list))])
 
     pair_counts_str_keys = {str(pair): count for pair, count in pair_counts.items()}
 
-    print(type(pair_counts_str_keys))
-    return Response({'pair_counts': pair_counts_str_keys})
+    # Sort the pair counts dictionary by count in decreasing order
+    sorted_pair_counts = dict(sorted(pair_counts_str_keys.items(), key=lambda item: item[1], reverse=True))
+
+    #Select only the top 50 items
+    top_50_items = dict(list(sorted_pair_counts.items())[:50])
+
+    print(type(sorted_pair_counts))
+    return Response({'pair_counts': top_50_items})
    # new_data={}
     
     # for key,value in pair_counts_str_keys.items():
