@@ -160,54 +160,58 @@ class SearchTweets(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)    
 
 class NameByReach(APIView): 
-    def get(self, *args,**kwargs):
-        entity=self.request.query_params.get('entity')
-        country=self.request.query_params.get('country',None)
-        start_date=self.request.query_params.get('start_date',None)
-        end_date=self.request.query_params.get('end_date',None)
+    def get(self, request, *args, **kwargs):
+        entity = self.request.query_params.get('entity')
+        country = self.request.query_params.get('country')
+        start_date_str = self.request.query_params.get('start_date')
+        end_date_str = self.request.query_params.get('end_date')
 
-        if start_date:
-            start_date=datetime.strptime(start_date,"%Y-%m-%d").date()
-        if end_date:
-            end_date=datetime.strptime(end_date,"%Y-%m-%d").date()
+        queryset = tweet.objects.all()
 
         if entity:
-            queryset=tweet.objects.filter(entity=entity)
+            queryset = queryset.filter(entity=entity)
+
         if country:
-            queryset=queryset.filter(country=country)
-        if start_date and end_date:
-            queryset=queryset.filter(created_at__range=[start_date,end_date])
-        
-        queryset=queryset.order_by('-reach')
+            queryset = queryset.filter(country=country)
 
-        serializers=ReachSerializer(queryset,many=True)
+        if start_date_str:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            queryset = queryset.filter(created_at__gte=start_date)
 
-        return Response(serializers.data)
+        if end_date_str:
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+            queryset = queryset.filter(created_at__lte=end_date)
+
+        queryset = queryset.order_by('-reach')
+
+        serializer = ReachSerializer(queryset, many=True)
+        return Response(serializer.data)
     
 class RealTimeTweet(APIView):
-    def get(self, *args,**kwargs):
-        sentiment=self.request.query_params.get('sentiment')
-        country=self.request.query_params.get('country',None)
-        start_date=self.request.query_params.get('start_date',None)
-        end_date=self.request.query_params.get('end_date',None)
+    def get(self, request, *args, **kwargs):
+        sentiment = self.request.query_params.get('sentiment')
+        country = self.request.query_params.get('country')
+        start_date_str = self.request.query_params.get('start_date')
+        end_date_str = self.request.query_params.get('end_date')
 
-        if start_date:
-            start_date=datetime.strptime(start_date,"%Y-%m-%d").date()
-        if end_date:
-            end_date=datetime.strptime(end_date,"%Y-%m-%d").date()
+        queryset = tweet.objects.all()
 
         if sentiment:
-            queryset=tweet.objects.filter(sentiment=sentiment)
+            queryset = queryset.filter(sentiment=sentiment)
+
         if country:
-            queryset=queryset.filter(country=country)
-        if start_date and end_date:
-            queryset=queryset.filter(created_at__range=[start_date,end_date])
-        
-        
+            queryset = queryset.filter(country=country)
 
-        serializers=RealTimeTweetSerializer(queryset,many=True)
+        if start_date_str:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            queryset = queryset.filter(created_at__gte=start_date)
 
-        return Response(serializers.data)
+        if end_date_str:
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+            queryset = queryset.filter(created_at__lte=end_date)
+
+        serializer = RealTimeTweetSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 @api_view(['GET'])
 def hashtag_pairs(request):

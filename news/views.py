@@ -62,29 +62,31 @@ class PostNews(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 @api_view(['GET'])
-def realtimenews(request,*args, **kwargs):
-        sentiment=request.query_params.get('sentiment')
-        country=request.query_params.get('country',None)
-        start_date=request.query_params.get('start_date',None)
-        end_date=request.query_params.get('end_date',None)
+def realtimenews(request, *args, **kwargs):
+    sentiment = request.query_params.get('sentiment')
+    country = request.query_params.get('country')
+    start_date_str = request.query_params.get('start_date')
+    end_date_str = request.query_params.get('end_date')
 
-        if start_date:
-            start_date=datetime.strptime(start_date,"%Y-%m-%d").date()
-        if end_date:
-            end_date=datetime.strptime(end_date,"%Y-%m-%d").date()
+    queryset = News.objects.all()
 
-        if sentiment:
-            queryset=News.objects.filter(sentiment=sentiment)
-        if country:
-            queryset=queryset.filter(country=country)
-        if start_date and end_date:
-            queryset=queryset.filter(modified_dates__range=[start_date,end_date])
-        
-        
+    if sentiment:
+        queryset = queryset.filter(sentiment=sentiment)
 
-        serializers=RealTimeNewsSerializers(queryset,many=True)
+    if country:
+        queryset = queryset.filter(country=country)
 
-        return Response(serializers.data)
+    if start_date_str:
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+        queryset = queryset.filter(modified_dates__gte=start_date)
+
+    if end_date_str:
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+        queryset = queryset.filter(modified_dates__lte=end_date)
+
+    serializer = RealTimeNewsSerializers(queryset, many=True)
+    return Response(serializer.data)
+
 
 class SentimentStatistics(APIView):
     def get(self, request):
@@ -137,40 +139,27 @@ class CountryWiseCount(APIView):
         end_date_str = request.query_params.get('end_date')
         country = request.query_params.get('country')
 
-        if not (start_date_str and end_date_str):
-            return Response({"error": "Start date and end date are required."}, status=status.HTTP_400_BAD_REQUEST)
+        if start_date_str and end_date_str:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            news_queryset = News.objects.filter(modified_dates__range=(start_date, end_date))
+            tweet_queryset = tweet.objects.filter(created_at__range=(start_date, end_date))
+        else:
+            news_queryset = News.objects.all()
+            tweet_queryset = tweet.objects.all()
 
-        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
-        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
-
-        # Fetch news and tweets data based on date range
-        news_queryset = News.objects.filter(modified_dates__range=(start_date, end_date))
-        tweet_queryset = tweet.objects.filter(created_at__range=(start_date, end_date))
-
-        # Filter by country if provided
         if country:
             news_queryset = news_queryset.filter(country=country)
             tweet_queryset = tweet_queryset.filter(country=country)
 
-        # Calculate positive sentiment counts for news
         positive_news_counts = news_queryset.filter(sentiment='Positive').values('country').annotate(count=Count('country'))
-
-        # Calculate positive sentiment counts for tweets
         positive_tweet_counts = tweet_queryset.filter(sentiment='Positive').values('country').annotate(count=Count('country'))
-
-        # Combine positive sentiment counts
         combined_positive_counts = self.combine_counts(positive_news_counts, positive_tweet_counts)
 
-        # Calculate negative sentiment counts for news
         negative_news_counts = news_queryset.filter(sentiment='Negative').values('country').annotate(count=Count('country'))
-
-        # Calculate negative sentiment counts for tweets
         negative_tweet_counts = tweet_queryset.filter(sentiment='Negative').values('country').annotate(count=Count('country'))
-
-        # Combine negative sentiment counts
         combined_negative_counts = self.combine_counts(negative_news_counts, negative_tweet_counts)
 
-        # Combine positive and negative counts
         combined_counts = {}
         for country, count in combined_positive_counts.items():
             combined_counts[country] = {
@@ -179,7 +168,6 @@ class CountryWiseCount(APIView):
                 'total_count': count + combined_negative_counts.get(country, 0)
             }
 
-        # Return the data as JSON response
         return Response(combined_counts, status=status.HTTP_200_OK)
 
     def combine_counts(self, queryset1, queryset2):
@@ -195,71 +183,74 @@ class CountryWiseCount(APIView):
             combined_counts[country] = combined_counts.get(country, 0) + count
 
         return combined_counts
-    
+        
 class LineChart(APIView):
     def get(self, request):
-        country = request.query_params.get('country',None)
-        sentiment = request.query_params.get('sentiment',None)
-        start_date_str = request.query_params.get('start_date')
-        end_date_str = request.query_params.get('end_date')
+        country = request.query_params.get('country', None)
+        sentiment = request.query_params.get('sentiment', None)
+        start_date_str = request.query_params.get('start_date', None)
+        end_date_str = request.query_params.get('end_date', None)
 
-        if not (start_date_str and end_date_str):
-            return Response({"error": "start date, and end date are required."}, status=status.HTTP_400_BAD_REQUEST)
+        # Calculate default start date (30 days ago)
+        if not start_date_str:
+            default_start_date = datetime.now().date() - timedelta(days=30)
+            start_date_str = default_start_date.strftime('%Y-%m-%d')
 
+        # Calculate end date if not provided (defaults to today)
+        if not end_date_str:
+            end_date_str = datetime.now().date().strftime('%Y-%m-%d')
+
+        # Convert start and end date strings to date objects
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
 
-        
+        # Filter news and tweets based on provided parameters
+        news_queryset = News.objects.filter(modified_dates__range=(start_date, end_date))
+        tweet_queryset = tweet.objects.filter(created_at__range=(start_date, end_date))
+
         if country:
-            news_queryset=News.objects.filter(country=country)
-            tweet_queryset=tweet.objects.filter(country=country)
+            news_queryset = news_queryset.filter(country=country)
+            tweet_queryset = tweet_queryset.filter(country=country)
 
-          
-        # Calculate count of news and tweets based on sentiment
         if sentiment:
-            if sentiment.lower() == 'positive':
-                news_count = news_queryset.filter(sentiment='Positive')
-                tweet_count = tweet_queryset.filter(sentiment='Positive')
-            elif sentiment.lower() == 'negative':
-                news_count = news_queryset.filter(sentiment='Negative')
-                tweet_count = tweet_queryset.filter(sentiment='Negative')
+            news_queryset = news_queryset.filter(sentiment=sentiment)
+            tweet_queryset = tweet_queryset.filter(sentiment=sentiment)
+
+        # Group news and tweets by date and count them
+        news_counts_by_date = news_queryset.values('modified_dates').annotate(news_count=Count('id'))
+        tweet_counts_by_date = tweet_queryset.values('created_at').annotate(tweet_count=Count('id'))
+
+        # Merge news and tweet counts by date
+        counts_by_date = {}
+        for item in news_counts_by_date:
+            date = item['modified_dates']
+            counts_by_date[date] = {'news_count': item['news_count'], 'tweet_count': 0}
+        for item in tweet_counts_by_date:
+            date = item['created_at']
+            if date in counts_by_date:
+                counts_by_date[date]['tweet_count'] = item['tweet_count']
             else:
-                return Response({"error": "Sentiment must be either 'positive' or 'negative'."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Fetch news and tweets data based on parameters
-        news_queryset = news_queryset.filter(modified_dates__range=(start_date, end_date)).count()
-        tweet_queryset = tweet_queryset.filter( created_at__range=(start_date, end_date)).count()
+                counts_by_date[date] = {'news_count': 0, 'tweet_count': item['tweet_count']}
 
-        # Calculate total count of news and tweets
-        total_news_count = news_queryset.count()
-        total_tweet_count = tweet_queryset.count()
+        # Calculate total count for each date
+        for date, counts in counts_by_date.items():
+            counts['total_count'] = counts['news_count'] + counts['tweet_count']
 
-        # Calculate the sum of news and tweet counts
-        total_count = news_count + tweet_count
+        # Construct the response
+        response_data = []
+        for date, counts in counts_by_date.items():
+            data = {
+                "date": date,
+                "news_count": counts['news_count'],
+                "tweet_count": counts['tweet_count'],
+                "total_count": counts['total_count']
+            }
+            if country and sentiment:
+                data["country"] = country
+                data["sentiment"] = sentiment
+            response_data.append(data)
 
-        # Return the data as JSON response
-        data = {
-            "country": country,
-            "sentiment": sentiment,
-            "start_date": start_date_str,
-            "end_date": end_date_str,
-            "news_count": news_count,
-            "tweet_count": tweet_count,
-            "total_count": total_count
-        }
-        return Response(data, status=status.HTTP_200_OK)
-
-
-
-
-
-
-
-
-
-
-
-
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 
