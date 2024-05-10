@@ -198,30 +198,37 @@ class CountryWiseCount(APIView):
     
 class LineChart(APIView):
     def get(self, request):
-        country = request.query_params.get('country')
-        sentiment = request.query_params.get('sentiment')
+        country = request.query_params.get('country',None)
+        sentiment = request.query_params.get('sentiment',None)
         start_date_str = request.query_params.get('start_date')
         end_date_str = request.query_params.get('end_date')
 
-        if not (country and sentiment and start_date_str and end_date_str):
-            return Response({"error": "Country, sentiment, start date, and end date are required."}, status=status.HTTP_400_BAD_REQUEST)
+        if not (start_date_str and end_date_str):
+            return Response({"error": "start date, and end date are required."}, status=status.HTTP_400_BAD_REQUEST)
 
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
 
-        # Fetch news and tweets data based on parameters
-        news_queryset = News.objects.filter(country=country, modified_dates__range=(start_date, end_date))
-        tweet_queryset = tweet.objects.filter(country=country, created_at__range=(start_date, end_date))
+        
+        if country:
+            news_queryset=News.objects.filter(country=country)
+            tweet_queryset=tweet.objects.filter(country=country)
 
+          
         # Calculate count of news and tweets based on sentiment
-        if sentiment.lower() == 'positive':
-            news_count = news_queryset.filter(sentiment='Positive').count()
-            tweet_count = tweet_queryset.filter(sentiment='Positive').count()
-        elif sentiment.lower() == 'negative':
-            news_count = news_queryset.filter(sentiment='Negative').count()
-            tweet_count = tweet_queryset.filter(sentiment='Negative').count()
-        else:
-            return Response({"error": "Sentiment must be either 'positive' or 'negative'."}, status=status.HTTP_400_BAD_REQUEST)
+        if sentiment:
+            if sentiment.lower() == 'positive':
+                news_count = news_queryset.filter(sentiment='Positive')
+                tweet_count = tweet_queryset.filter(sentiment='Positive')
+            elif sentiment.lower() == 'negative':
+                news_count = news_queryset.filter(sentiment='Negative')
+                tweet_count = tweet_queryset.filter(sentiment='Negative')
+            else:
+                return Response({"error": "Sentiment must be either 'positive' or 'negative'."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Fetch news and tweets data based on parameters
+        news_queryset = news_queryset.filter(modified_dates__range=(start_date, end_date)).count()
+        tweet_queryset = tweet_queryset.filter( created_at__range=(start_date, end_date)).count()
 
         # Calculate total count of news and tweets
         total_news_count = news_queryset.count()

@@ -14,7 +14,7 @@ urlpatterns = [
 
 
     #lineChart
-    path('linechart/',LineChart.as_view(),name="linechart"),
+    #path('linechart/',LineChart.as_view(),name="linechart"),
    # http://127.0.0.1:8000/linechart/?country=Albania&sentiment=positive&start_date=2024-04-06&end_date=2024-05-06
 
 

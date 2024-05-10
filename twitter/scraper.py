@@ -13,8 +13,8 @@ from collections import Counter
 GOOGLE_API_KEY= 'AIzaSyAEgGg08BmZIDyxOiCVeRlibO9OTOLxTMs'
 # list of countries
 countries = [
-         "india"]
-        #  ,"Afghanistan","Albania","Algeria"
+       
+          "Afghanistan","Albania","Algeria"]
         #"Andorra","Angola","Antigua and Barbuda","Argentina","Armenia",
         # "Australia","Austria","Azerbaijan","Bahamas, The","Bahrain","Bangladesh","Barbados","Belarus","Belgium",
         # "Belize", "Benin","Bhutan", "Bolivia", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi",
@@ -34,9 +34,10 @@ countries = [
         # "Vietnam","Yemen","Zambia","Zimbabwe","Abkhazia","Artsakh","Cook Islands","Kosovo","Niue","Northern Cyprus","Somaliland","South Ossetia",
         # "Taiwan","Transnistria"]
 
-related_keywords = ["health",
+related_keywords = [
+    # "health",
                     # "education",
-    # "Asperger's syndrome",
+     "Asperger's syndrome",
     # "Autism spectrum disorder (asd)"
     # "Neurodevelopmental disorder",
     # "Social communication",
@@ -167,7 +168,7 @@ def twitter_search(keyword):
     url = "https://twitter154.p.rapidapi.com/search/search"
     
     today = datetime.today()
-    yesterday = today - timedelta(days=1)
+    yesterday = today - timedelta(days=90)
     yesterday = yesterday.strftime('%Y-%m-%d')
     
     # Increment the end_date by one day to include tweets for that day
@@ -194,7 +195,7 @@ def twitter_search(keyword):
     
     response = requests.get(url, headers=headers, params=querystring)
     #response.raise_for_status()  # Raise an exception for HTTP errors
-    #print(response.json())
+    print(response.json())
     try: 
         # tweets_data = response.json()['results']
         # if not tweets_data:
@@ -285,7 +286,7 @@ def twitter_search(keyword):
     print("by reach : ",df)
     
     print ("df",type(df))
-    #print(df)
+    print(df)
     
 
     

@@ -10,6 +10,7 @@ from rest_framework.decorators import api_view
 import itertools
 from .date_scraper import twitter_search  # Import your scraping function
 from . scraper import *
+import ast
 
 class PostTweets(APIView):
     def get(self, request):
@@ -228,18 +229,80 @@ def hashtag_pairs(request):
 
     if start_date and end_date:
         queryset = queryset.filter(created_at__range=[start_date, end_date])
+   
+    # Extract hashtags from filtered tweets
+    hashtags = []
 
-    # Extract hashtags from tweets and generate pairs
-    hashtag_combinations = Counter()
-    for t in queryset:
-        hashtags = t.hashtags
-        pairs = itertools.combinations(sorted(hashtags), 2)
-        hashtag_combinations.update(pairs)
+    for tweet_obj in queryset:
+        tweet_hashtags = tweet_obj.hashtags
+        tweet_hashtags=ast.literal_eval(tweet_hashtags)
+        # print(type(tweet_hashtags))
+        # print(tweet_hashtags)
+        if  len(tweet_hashtags)>0:
+            hashtags.append(tweet_hashtags)
+        #print(hashtags)
+    # Construct output format
+    data = {'hashtags': hashtags}
+    pair_counts = Counter()
+
+    for hashtags_list in data['hashtags']:
+        pairs = combinations(hashtags_list, 2)
+        pair_counts.update(pairs)
+
+    pair_counts_str_keys = {str(pair): count for pair, count in pair_counts.items()}
+
+    print(type(pair_counts_str_keys))
+    return Response({'pair_counts': pair_counts_str_keys})
+   # new_data={}
     
-    # Convert tuple keys to concatenated strings
-    hashtag_combinations_str_keys = {f"{tag1} {tag2}": count for (tag1, tag2), count in hashtag_combinations.items()}
+    # for key,value in pair_counts_str_keys.items():
+    #    newkey=ast.literal_eval(key)
+    #    new_data[newkey]=value
+    # print(new_data)
+    
+    # Construct response
 
-    return Response(hashtag_combinations_str_keys)
+
+   
+  
+    #df=pd.DataFrame(data)
+    
+#     return Response(result)
+
+# def count_hashtag_combinations(hashtags_list):
+#     ##  Counts the occurrences of each unique combination of hashtags
+#     pairs = combinations(sorted(hashtags_list), 2)
+    # return Counter(pairs)
+#df['hashtag_combinations'] = df['hashtags'].apply(count_hashtag_combinations)
+#print(df)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+#     # Extract hashtags from tweets and generate pairs
+#     hashtag_combinations = Counter()
+#     for t in queryset:
+#         hashtags = t.hashtags
+#         pairs = itertools.combinations(sorted(hashtags), 2)
+#         hashtag_combinations.update(pairs)
+    
+#     # Convert tuple keys to concatenated strings
+#     hashtag_combinations_str_keys = {f"{tag1} {tag2}": count for (tag1, tag2), count in hashtag_combinations.items()}
+
+#     return Response(hashtag_combinations_str_keys)
+
+# def count_hashtag_combinations(hashtags_list):
+#     ##  Counts the occurrences of each unique combination of hashtags
+#     pairs = combinations(sorted(hashtags_list), 2)
+#     return Counter(pairs)
 
 
 
@@ -247,9 +310,9 @@ def hashtag_pairs(request):
         
 
 
-    # user_followers_count = scraped_tweets['user_followers_count'].iloc[i]
-                # user_friends_count = scraped_tweets['user_friends_count'].iloc[i]
-                # retweet_count = scraped_tweets['retweet_count'].iloc[i]
-                # favorite_count = scraped_tweets['favorite_count'].iloc[i]
-                # reach = scraped_tweets['reach'].iloc[i]
-                # print("user_followers_count : ",user_followers_count)
+#     # user_followers_count = scraped_tweets['user_followers_count'].iloc[i]
+#                 # user_friends_count = scraped_tweets['user_friends_count'].iloc[i]
+#                 # retweet_count = scraped_tweets['retweet_count'].iloc[i]
+#                 # favorite_count = scraped_tweets['favorite_count'].iloc[i]
+#                 # reach = scraped_tweets['reach'].iloc[i]
+#                 # print("user_followers_count : ",user_followers_count)
