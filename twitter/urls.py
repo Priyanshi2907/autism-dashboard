@@ -4,6 +4,8 @@ from . views import *
 urlpatterns = [
     path('tweets/',PostTweets.as_view(),name="tweets"),
 
+    path('gettweets/',getdata.as_view(),name="get_data"),
+
     #order by reach
     path('orderbyreach/',NameByReach.as_view(),name="news"),
     #url eg: http://127.0.0.1:8000/orderbyreach/?entity=PERSON&country=india&start_date=2024-04-01&end_date=2024-04-30

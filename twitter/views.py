@@ -164,6 +164,13 @@ class SearchTweets(APIView):
         serializer = TweetSerializers(saved_tweets, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)    
 
+class getdata(APIView):
+    def get(self,request):
+
+        queryset=tweet.objects.all()
+        serializer = TweetSerializers(queryset, many=True)
+        return Response(serializer.data)
+    
 class NameByReach(APIView): 
     def get(self, request, *args, **kwargs):
         entity = self.request.query_params.get('entity')
