@@ -20,7 +20,7 @@ class PostTweets(APIView):
         related_keywords = [
             #"education",
             # "health",
-            # "autism"
+            "autism",
             "Asperger's syndrome",
             "Autism spectrum disorder (asd)",
             "Neurodevelopmental disorder",
