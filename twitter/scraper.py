@@ -18,21 +18,51 @@ countries = [
         "Andorra","Angola","Antigua and Barbuda","Argentina","Armenia",
         "Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium",
         "Belize", "Benin","Bhutan", "Bolivia", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi",
-        "Cambodia", "Cameroon",  "Canada",  "Cape Verde", "Central African Republic", "Chad", "Chile", "China"]
-        # "Colombia","Comoros",     "Congo",        "Costa Rica",        "Croatia",        "Cuba",        "Cyprus",        "Czech Republic",        "Denmark",
-        # "Djibouti","Dominica","Dominican Republic","East Timor","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea",
-        # "Estonia","Eswatini", "Ethiopia", "Fiji", "Finland", "France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada",
-        # "Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Ivory Coast","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati",
-        # "North Korea","South Korea","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania",
-        # "Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia",
-        # "Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal","Netherlands","New Zealand",
-        # "Nicaragua","Niger","Nigeria","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay",
-        # "Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia","Samoa","San Marino","Saudi Arabia","Senegal","Serbia","Seychelles",
-        # "Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Sudan","Spain","Sri Lanka","Sudan","Suriname",
-        # "Sweden","Switzerland","Syria","Tajikistan","Tanzania","Thailand","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan",
-        # "Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela",
-        # "Vietnam","Yemen","Zambia","Zimbabwe","Abkhazia","Artsakh","Cook Islands","Kosovo","Niue","Northern Cyprus","Somaliland","South Ossetia",
-        # "Taiwan","Transnistria"]
+        "Cambodia", "Cameroon",  "Canada",  "Cape Verde", "Central African Republic", "Chad", "Chile", "China",
+        "Colombia","Comoros",     "Congo",        "Costa Rica",        "Croatia",        "Cuba",        "Cyprus",        "Czech Republic",        "Denmark",
+        "Djibouti","Dominica","Dominican Republic","East Timor","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea",
+        "Estonia","Eswatini", "Ethiopia", "Fiji", "Finland", "France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada",
+        "Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Ivory Coast","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati",
+        "North Korea","South Korea","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania",
+        "Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia",
+        "Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal","Netherlands","New Zealand",
+        "Nicaragua","Niger","Nigeria","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay",
+        "Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia","Samoa","San Marino","Saudi Arabia","Senegal","Serbia","Seychelles",
+        "Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Sudan","Spain","Sri Lanka","Sudan","Suriname",
+        "Sweden","Switzerland","Syria","Tajikistan","Tanzania","Thailand","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan",
+        "Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela",
+        "Vietnam","Yemen","Zambia","Zimbabwe","Abkhazia","Artsakh","Cook Islands","Kosovo","Niue","Northern Cyprus","Somaliland","South Ossetia",
+        "Taiwan","Transnistria"]
+
+# Dictionary mapping common aliases to full country names
+country_aliases = {
+    "usa": "United States", 
+    "uk": "United Kingdom",
+    "uae": "United Arab Emirates",
+    
+    # Add more aliases as needed
+}
+
+def extract_countries(text):
+    """
+    Extracts countries mentioned in the text of tweets.
+    """
+    mentioned_countries = []
+    # Find all words in the text
+    words = re.findall(r'\b\w+\b', text)
+    # Check if each word matches any country or its alias in the 'countries' list
+    for word in words:
+        word_lower = word.lower()
+        if word_lower in [country.lower() for country in countries]:
+            mentioned_countries.append(word_lower.capitalize())  # Capitalize the first letter
+        elif word_lower in [alias.lower() for alias in country_aliases.keys()]:
+            mentioned_countries.append(country_aliases[word_lower.lower()])
+    return mentioned_countries
+
+#example
+text="I love spain and albania"
+mentioned_countires=extract_countries(text)
+print(mentioned_countires)
 
 related_keywords = [
     # "health",
@@ -158,9 +188,6 @@ def sentiment(text):
         print(e)
         return 'No Response'
 def twitter_search(keyword):
-    
-    
-            
     '''
     Searches for the Tweets with certain keyword  
     '''
@@ -177,10 +204,10 @@ def twitter_search(keyword):
     querystring = {
         "query": keyword,
         "section": "top",
-        "min_retweets": "1",
-        "min_likes": "1",
-        "limit": "20",
-        "start_date": yesterday,
+        # "min_retweets": "1",
+        # "min_likes": "1",
+        # "limit": "20",
+        "start_date": today,#today
         "language": "en"
     }
     
@@ -188,31 +215,24 @@ def twitter_search(keyword):
     'X-RapidAPI-Key': 'ede002137bmsh8b276e5911da552p104e91jsn05192d4dc026',
     'X-RapidAPI-Host': 'twitter154.p.rapidapi.com'
   }
-    ## Country Wise Calculation
-    country_positive_counts = {}
-    country_negative_counts = {}
-
     
     response = requests.get(url, headers=headers, params=querystring)
     #response.raise_for_status()  # Raise an exception for HTTP errors
     print(response.json())
     try: 
-        # tweets_data = response.json()['results']
-        # if not tweets_data:
-        #     print("No tweets found.")
-        #     return None
+       
         data_2 = [{
             "tweet_id": tweet['tweet_id'],
             "text": tweet['text'],
             "created_at": datetime.strptime(tweet['creation_date'].replace('+0000', ''), "%a %b %d %H:%M:%S %Y").strftime('%Y-%m-%d'),
             "tweet_link": tweet['expanded_url'],
             "user_screen_name": tweet['user']['username'],
-            "user_location": tweet['user']['location'],
+            #"user_location": tweet['user']['location'],
             "user_followers_count": tweet['user'].get('follower_count', 0),  # Replace missing values with 0
-            "user_friends_count": tweet['user'].get('following_count', 0),  # Replace missing values with 0
-            "retweet_count": tweet.get('retweet_count', 0),  # Replace missing values with 0
-            "favorite_count": tweet.get('favorite_count', 0), 
-            "lang": tweet['language'],
+            #"user_friends_count": tweet['user'].get('following_count', 0),  # Replace missing values with 0
+            #"retweet_count": tweet.get('retweet_count', 0),  # Replace missing values with 0
+            #"favorite_count": tweet.get('favorite_count', 0), 
+            #"lang": tweet['language'],
             "username": tweet['user']['name']
             } for tweet in response.json()['results'] 
             if all(tweet.get(key) for key in ['tweet_id', 'text', 'creation_date', 'expanded_url', 'user'])
@@ -225,49 +245,42 @@ def twitter_search(keyword):
             "created_at": datetime.strptime(tweet['creation_date'].replace('+0000', ''), "%a %b %d %H:%M:%S %Y").strftime('%Y-%m-%d'),
             "tweet_link": tweet['expanded_url'],
             "user_screen_name": tweet['user']['username'],
-            "user_location": tweet['user']['location'],
+            #"user_location": tweet['user']['location'],
             "user_followers_count": tweet['user'].get('follower_count', 0),  # Replace missing values with 0
-            "user_friends_count": tweet['user'].get('following_count', 0),  # Replace missing values with 0
-            "retweet_count": tweet.get('retweet_count', 0),  # Replace missing values with 0
-            "favorite_count": tweet.get('favorite_count', 0), 
-            "lang": tweet['language'],
+            #"user_friends_count": tweet['user'].get('following_count', 0),  # Replace missing values with 0
+            #"retweet_count": tweet.get('retweet_count', 0),  # Replace missing values with 0
+            #"favorite_count": tweet.get('favorite_count', 0), 
+            #"lang": tweet['language'],
+            "profile_pic":tweet['user']['profile_pic_url'],
             "username": tweet['user']['username'],
             } for tweet in response.json()['results']
             if all(tweet.get(key) for key in ['tweet_id', 'text', 'creation_date', 'expanded_url', 'user'])
         ]
     
     df = pd.DataFrame(data_2)
-    print("i am comming here")
-    
-       
+    print("i am comming here")       
     try:
             
             
-            if 'user_followers_count' in df.columns and 'text' in df.columns:
-                df['reach'] = df['user_followers_count'] + df['user_friends_count'] + df['retweet_count'] + df['favorite_count']
-                df['hashtags'] = df['text'].apply(lambda x: re.findall(r'#\w+', x))
-
-                df['sentiment'] = df['text'].apply(sentiment)
+        if 'user_followers_count' in df.columns and 'text' in df.columns:
+            #df['reach'] = df['user_followers_count'] + df['user_friends_count'] + df['retweet_count'] + df['favorite_count']
+            #df['hashtags'] = df['text'].apply(lambda x: re.findall(r'#\w+', x) )   
+            df['country']=df['text'].apply(extract_countries)
+            df['country']=df["country"].apply(lambda x : ", ".join(x))  
+            df['sentiment'] = df['text'].apply(sentiment)    
+            # keyCountry=keyword.split()
+            # df['country'] = keyCountry[-1]
     
-                keyCountry=keyword.split()
-                df['country'] = keyCountry[-1]
-     
-                df['entity']=df["username"].apply(NER)
+            df['entity']=df["username"].apply(NER)    
+            df['user_profile_link'] = 'https://twitter.com/' + df['user_screen_name']    
+        else:
+            df['reach'] = 0
+            df["hashtags"]=[]
+            df['sentiment'] = " "    
+            df['country']=" "
     
-                df['user_profile_link'] = 'https://twitter.com/' + df['user_screen_name']
-    
-            else:
-                df['reach'] = 0
-                df["hashtags"]=[]
-                df['sentiment'] = " "
-    
-                keyCountry=keyword.split()
-                df['country'] = " "
-     
-                df['entity']=" "
-    
-                df['user_profile_link'] = " "
-
+            df['entity']=" "    
+            df['user_profile_link'] = "  "   
             
             
             # hashtags_count = {}
@@ -291,9 +304,7 @@ def twitter_search(keyword):
     
     print ("df",type(df))
     print(df)
-    
-
-    
+       
     return df #hashtags_count
     
     
@@ -350,22 +361,13 @@ def main():
    
     for related_keyword in related_keywords:
     
-        for country in countries:        
+        # for country in countries:        
     
-            keyword = related_keyword + ' ' + country
+            keyword = related_keyword 
   
             print("keyword in main : ",keyword)
             output = twitter_search(keyword)
-            #if output is not None:
-             #   filtered_tweets = filter_tweets_by_month(output)
-              #  positive_count, negative_count = count_sentiment(filtered_tweets)
-               # print("Total positive tweets for current month:", positive_count)
-                #print("Total negative tweets for current month:", negative_count)
-
-            #print("main df : ",output)
-        
-        # if not df.empty:
-        # df['country'] = country
+            
             
         # main_df = pd.concat([main_df, df], axis=0)
         

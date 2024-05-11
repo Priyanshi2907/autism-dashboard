@@ -8,8 +8,8 @@ from .serializers import TweetSerializers,ReachSerializer,RealTimeTweetSerialize
 from datetime import datetime, timedelta
 from rest_framework.decorators import api_view
 import itertools
-from .date_scraper import twitter_search  # Import your scraping function
-from . scraper import *
+# from .date_scraper import twitter_search  # Import your scraping function
+from . scraper_tweet import *
 import ast
 from langdetect import detect,LangDetectException
 
@@ -18,7 +18,8 @@ class PostTweets(APIView):
         print("View post of tweets")
         #list of keyword
         related_keywords = [
-            # "health"
+            #"education",
+            # "health",
             # "autism"
             "Asperger's syndrome",
             "Autism spectrum disorder (asd)",
@@ -27,19 +28,17 @@ class PostTweets(APIView):
             "Sensory processing",
             "Behavioral therapy"
             "Special education"
-            # "Early intervention","Genetic factors","Neurodiversity",
-            # "Social skills","Cognitive deficits","Speech therapy","Pervasive developmental disorder (PDD)"
-            # ,"Executive function","Applied behavior analysis (ABA)","Communication difficulties","Repetitive behaviors","Hyperfocus",
-            # "Inclusion", 'Autism Spectrum Disorder', 'Pervasive Developmental Disorder','Autism Support', 'Autistic Children', 
-            # 'Special Needs', 'Developmental Disability', 'Learning Disability','Sensory Processing Disorder','Social Skills Training'
+            "Early intervention","Genetic factors","Neurodiversity",
+            "Social skills","Cognitive deficits","Speech therapy","Pervasive developmental disorder (PDD)"
+            ,"Executive function","Applied behavior analysis (ABA)","Communication difficulties","Repetitive behaviors","Hyperfocus",
+            "Inclusion", 'Autism Spectrum Disorder', 'Pervasive Developmental Disorder','Autism Support', 'Autistic Children', 
+            'Special Needs', 'Developmental Disability', 'Learning Disability','Sensory Processing Disorder','Social Skills Training'
         ]
-        countries = ["india","Afganistan"]
+        # countries = ["india","Afganistan"]
         saved_tweets = []
         for related_keyword in related_keywords:
-            for country in countries:
-                keyword=related_keyword+" "+country
-                
-        
+            # for country in countries:
+                keyword=related_keyword        
                 print("key: ", keyword)
                 # Scrape tweets using the keyword
                 scraped_tweets = twitter_search(keyword)
@@ -52,31 +51,36 @@ class PostTweets(APIView):
                 # Save the scraped tweets to the database
                 for index, tweet_data in scraped_tweets.iterrows():
                     print("tweet data : ",tweet_data)
-                    
-                    tweet_obj = tweet(
-                        tweet_id=tweet_data['tweet_id'],
-                        text=tweet_data['text'],
-                        created_at=tweet_data['created_at'],
-                        tweet_link=tweet_data['tweet_link'],
-                        user_screen_name=tweet_data['user_screen_name'],
-                        user_location=tweet_data['user_location'],
-                        user_followers_count=tweet_data['user_followers_count'],
-                        user_friends_count=tweet_data['user_friends_count'],
-                        retweet_count=tweet_data['retweet_count'],
-                        favorite_count=tweet_data['favorite_count'],
-                        lang=tweet_data['lang'],
-                        reach=tweet_data['reach'],
-                        hashtags=tweet_data['hashtags'],
-                        country=tweet_data['country'],
-                        sentiment=tweet_data['sentiment'],
-                        entity=tweet_data['entity'],
-                        name=tweet_data['username'],
-                        user_profile_link=tweet_data['user_profile_link']
+                    if not tweet.objects.filter(tweet_id=tweet_data['tweet_id']).exists():
+
+                        tweet_obj = tweet(
+                            tweet_id=tweet_data['tweet_id'],
+                            text=tweet_data['text'],
+                            created_at=tweet_data['created_at'],
+                            tweet_link=tweet_data['tweet_link'],
+                            user_screen_name=tweet_data['user_screen_name'],
+                            #user_location=tweet_data['user_location'],
+                            user_followers_count=tweet_data['user_followers_count'],
+                            #user_friends_count=tweet_data['user_friends_count'],
+                            #retweet_count=tweet_data['retweet_count'],
+                            #favorite_count=tweet_data['favorite_count'],
+                            #lang=tweet_data['lang'],
+                            # reach=tweet_data['reach'],
+                            # hashtags=tweet_data['hashtags'],
+                            country=tweet_data['country'],
+                            # sentiment=tweet_data['sentiment'],
+                            # entity=tweet_data['entity'],
+                            profile_pic=tweet_data['profile_pic'],
+                            name=tweet_data['username'],
+                            user_profile_link=tweet_data['user_profile_link']
+        
+                        )
+                        tweet_obj.save()
+                        saved_tweets.append(tweet_obj)  
+                        print("tweets saved")  
+                    else:
+                        print("Tweet with ID {} already exists, skipping...".format(tweet_data['tweet_id']))
     
-                    )
-                    tweet_obj.save()
-                    saved_tweets.append(tweet_obj)  
-                    print("tweets saved")      
         # Serialize the saved tweets
         serializer = TweetSerializers(saved_tweets, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)    
