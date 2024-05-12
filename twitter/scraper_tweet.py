@@ -63,13 +63,13 @@ mentioned_countires=extract_countries(text)
 print(mentioned_countires)
 
 related_keywords = [
-    "health",
-    "education",
-    "Autism"
-    #  "Asperger's syndrome",
-    # "Autism spectrum disorder (asd)"
-    # "Neurodevelopmental disorder",
-    # "Social communication",
+    # "health",
+    # "education",
+    "Autism",
+     "Asperger's syndrome",
+    "Autism spectrum disorder (asd)",
+    "Neurodevelopmental disorder",
+    "Social communication",
     # "Sensory processing",
     # "Behavioral therapy",
     # "Early intervention",
@@ -177,7 +177,7 @@ def twitter_search(keyword):
         return None 
     
     # Sort the DataFrame by username in decreasing order of reach
-    #df = df.sort_values(by=['user_followers_count'], ascending=False)
+    df = df.sort_values(by=['user_followers_count'], ascending=False)
 
     # print("by reach : ",df)
     

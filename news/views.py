@@ -7,7 +7,7 @@ from twitter.models import tweet
 from .serializers import NewsSerializers,RealTimeNewsSerializers
 from django.utils import timezone
 
-from .scraper import *
+from .scraper_news import *
 from django.db import transaction
 from django.db.models import Count
 from rest_framework.decorators import api_view
@@ -17,12 +17,63 @@ from rest_framework.decorators import api_view
 class PostNews(APIView):
     def get(self, request):
         print("post me hun")
-        related_keywords = ["Autism spectrum disorder (asd)",
-                            "Asperger's syndrome"
-                            ]
-        countries = ["Albania",
-                     "Afghanistan"
-                    ]   
+        related_keywords = [
+                            # "Autism",
+                            # "Autism spectrum disorder (asd)",
+                            # "Asperger's syndrome",
+                            # "Neurodevelopmental disorder",
+                            # "Social communication",
+                            # "Sensory processing",
+                            # "Behavioral therapy",
+                            # "Early intervention",
+                            # "Special education",
+                            "Genetic factors",
+                            # "Neurodiversity",
+                            # "Social skills",
+                            # "Cognitive deficits",
+                            # "Speech therapy",
+                            # "Pervasive developmental disorder (PDD)",
+                            # "Executive function",
+                            # "Applied behavior analysis (ABA)",
+                            # "Communication difficulties",
+                            # "Repetitive behaviors",
+                            # "Hyperfocus",
+                            # "Inclusion", 
+                            # 'Autism Spectrum Disorder', 
+                            # 'Pervasive Developmental Disorder',
+                            # 'Autism Support', 
+                            # 'Autistic Children', 
+                            # 'Special Needs', 
+                            # 'Developmental Disability', 
+                            # 'Learning Disability',
+                            # 'Sensory Processing Disorder',
+                            # 'Social Skills Training'
+        ]
+        countries = [
+                    #   "Afghanistan",
+                    #   "Albania",
+                    #   "Algeria",
+                    #   "Andorra","Angola","Antigua and Barbuda","Argentina","Armenia",
+                    #   "Australia","Austria","Azerbaijan","Bahamas, The","Bahrain","Bangladesh","Barbados","Belarus","Belgium",
+                    #   "Belize", "Benin","Bhutan", "Bolivia", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi",
+                    #   "Cambodia", "Cameroon",  "Canada",  "Cape Verde", "Central African Republic", "Chad", "Chile", "China",
+                    #   "Colombia","Comoros",     "Congo",        "Costa Rica",        "Croatia",        "Cuba",        "Cyprus",        "Czech Republic",        "Denmark",
+                    #   "Djibouti","Dominica","Dominican Republic",
+                      "East Timor","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea",
+                      "Estonia","Eswatini", "Ethiopia", "Fiji", "Finland", "France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada",
+                    #   "Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Ivory Coast","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati",
+                    #   "North Korea","South Korea","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania",
+                    #   "Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia",
+                    #   "Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal","Netherlands","New Zealand",
+                    #   "Nicaragua","Niger","Nigeria","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay",
+                    #   "Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia","Samoa","San Marino","Saudi Arabia","Senegal","Serbia","Seychelles",
+                    #   "Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Sudan","Spain","Sri Lanka","Sudan","Suriname",
+                    #   "Sweden","Switzerland","Syria","Tajikistan","Tanzania","Thailand","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan",
+                    #   "Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela",
+                    #   "Vietnam","Yemen","Zambia","Zimbabwe","Abkhazia","Artsakh","Cook Islands","Kosovo","Niue","Northern Cyprus","Somaliland","South Ossetia",
+                    #   "Taiwan","Transnistria"
+                    ] 
+
         news_to_save = []     
         for related_keyword in related_keywords:
             for country in countries:
@@ -31,6 +82,7 @@ class PostNews(APIView):
                 print(f'\n Fetching News articles for- {keyword} news\n')
        
                 scraped_news = google_news_scraper(keyword) 
+                print("****",scraped_news)
                 #print (scraped_news)
                 if scraped_news is None:
                     return Response("Failed to scrape news", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -38,21 +90,24 @@ class PostNews(APIView):
                 # Save the scraped tweets to the database in batches
                
                 for index,news_data in scraped_news.iterrows():
-                    print("news data : ",news_data)
-                    news_obj = News(
-                        country=news_data['country'],
-                        source=news_data['source'],
-                        link=news_data['link'],
-                        title=news_data['title'],
-                        date=news_data['date'],
-                        description=news_data['description'],
-                        modified_dates=news_data['Modified Dates'],
-                        sentiment=news_data['sentiment']
-                       
-                    )
-                    news_obj.save()
-                    news_to_save.append(news_obj)
-                    print("saved")
+                    if not News.objects.filter(link=news_data['link']).exists():
+
+                        print("news data : ",news_data)
+                        news_obj = News(
+                            country=news_data['country'],
+                            source=news_data['source'],
+                            link=news_data['link'],
+                            title=news_data['title'],
+                            date=news_data['date'],
+                            image=news_data['image']
+                            # description=news_data['description'],
+                            # modified_dates=news_data['Modified Dates'],
+                            # sentiment=news_data['sentiment']
+                           
+                        )
+                        news_obj.save()
+                        news_to_save.append(news_obj)
+                        print("saved")
                 # Batch insert tweets into the database
                 # with transaction.atomic():
                 #     News.objects.bulk_create(news_to_save)
@@ -60,6 +115,12 @@ class PostNews(APIView):
         # Return response
         serializer = NewsSerializers(news_to_save, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class GetNews(APIView):
+    def get(self,request):
+        queryset=News.objects.all()
+        serializer=NewsSerializers(queryset,many=True)
+        return Response(serializer.data)
     
 @api_view(['GET'])
 def realtimenews(request, *args, **kwargs):
