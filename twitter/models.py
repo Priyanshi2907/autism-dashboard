@@ -1,9 +1,9 @@
 from django.db import models
 
 class tweet(models.Model):
-    tweet_id=models.CharField(max_length=100)
-    text=models.TextField(max_length=100)
-    created_at=models.CharField(max_length=100)
+    tweet_id=models.CharField(max_length=100,blank=True,null=True)
+    text=models.TextField(max_length=100,blank=True,null=True)
+    created_at=models.CharField(max_length=100,blank=True,null=True)
     tweet_link=models.URLField(blank=True, null=True)
     user_screen_name=models.CharField(max_length=100,blank=True, null=True)
     #user_location=models.CharField(max_length=100 ,blank=True, null=True)

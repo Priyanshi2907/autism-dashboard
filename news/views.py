@@ -98,10 +98,11 @@ class PostNews(APIView):
                             source=news_data['source'],
                             link=news_data['link'],
                             title=news_data['title'],
-                            modified_dates=news_data['date'],
-                            image=news_data['image']
+                            date=news_data['date'],
+                            image=news_data['image'],
+                            modified_dates=news_data['Modified Dates'],
                             # description=news_data['description'],
-                            # modified_dates=news_data['Modified Dates'],
+                            
                             # sentiment=news_data['sentiment']
                            
                         )

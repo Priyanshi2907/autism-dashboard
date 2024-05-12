@@ -26,10 +26,10 @@ GOOGLE_API_KEY= 'AIzaSyAEgGg08BmZIDyxOiCVeRlibO9OTOLxTMs'
 #     driver = webdriver.Chrome()  # Reinitialize the WebDriver
          
 countries = [
-         "Afghanistan",
-         "Albania",
-         "Algeria",
-        "Andorra","Angola","Antigua and Barbuda","Argentina","Armenia",]
+         "Afghanistan"]
+        #  "Albania",
+        #  "Algeria",
+        # "Andorra","Angola","Antigua and Barbuda","Argentina","Armenia",]
         # "Australia","Austria","Azerbaijan","Bahamas, The","Bahrain","Bangladesh","Barbados","Belarus","Belgium",
         # "Belize", "Benin","Bhutan", "Bolivia", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi",
         # "Cambodia", "Cameroon",  "Canada",  "Cape Verde", "Central African Republic", "Chad", "Chile", "China",
@@ -49,36 +49,37 @@ countries = [
         # "Taiwan","Transnistria"]
            
 related_keywords = [
-    "Autism",
-    "Asperger's syndrome",
-    "Autism spectrum disorder (asd)",
-    "Neurodevelopmental disorder",
-    "Social communication",
-    "Sensory processing",
-    "Behavioral therapy",
-    "Early intervention",
-    "Special education",
-    "Genetic factors",
-    "Neurodiversity",
-    "Social skills",
-    "Cognitive deficits",
-    "Speech therapy",
-    "Pervasive developmental disorder (PDD)",
-    "Executive function",
-    "Applied behavior analysis (ABA)",
-    "Communication difficulties",
-    "Repetitive behaviors",
-    "Hyperfocus",
-    "Inclusion", 
-    'Autism Spectrum Disorder', 
-    'Pervasive Developmental Disorder',
-    'Autism Support', 
-    'Autistic Children', 
-    'Special Needs', 
-    'Developmental Disability', 
-    'Learning Disability',
-    'Sensory Processing Disorder',
-    'Social Skills Training'
+    "health"
+    # "Autism",
+    # "Asperger's syndrome",
+    # "Autism spectrum disorder (asd)",
+    # "Neurodevelopmental disorder",
+    # "Social communication",
+    # "Sensory processing",
+    # "Behavioral therapy",
+    # "Early intervention",
+    # "Special education",
+    # "Genetic factors",
+    # "Neurodiversity",
+    # "Social skills",
+    # "Cognitive deficits",
+    # "Speech therapy",
+    # "Pervasive developmental disorder (PDD)",
+    # "Executive function",
+    # "Applied behavior analysis (ABA)",
+    # "Communication difficulties",
+    # "Repetitive behaviors",
+    # "Hyperfocus",
+    # "Inclusion", 
+    # 'Autism Spectrum Disorder', 
+    # 'Pervasive Developmental Disorder',
+    # 'Autism Support', 
+    # 'Autistic Children', 
+    # 'Special Needs', 
+    # 'Developmental Disability', 
+    # 'Learning Disability',
+    # 'Sensory Processing Disorder',
+    # 'Social Skills Training'
     ]
 
 def headlines(link):
@@ -88,12 +89,12 @@ def headlines(link):
     link.strip()
     page = Article(str(link), config=config)
     try:
-        print('title page')
+        # print('title page')
         page.download()
         page.parse()
         return page.title
     except:
-        print("untitled page")
+        # print("untitled page")
         return 'Untitled Page'
 
 ll = []
@@ -129,31 +130,31 @@ def google_news_scraper(keyword):
             date = row.find('div',attrs={'class':"OSrXXb rbYSKb LfVVr"}).text
             
              # Parse the date string into a datetime object
-            article_date = dateparser.parse(date)
+            #article_date = dateparser.parse(date)
             # images = row.find('img').get('src')
             # Check if the article is from today
-            if article_date.date() >= datetime.now().date():
-                images = row.find('img').get('src')
-                if url not in visited_urls and date not in visited_url_date:
-                    des['source'] = source
-                    des['link'] = url
-                    des['title'] = title
-                    des['date'] = date
-                    des['image'] = images
-                    data.append(des)
-                    #print("data: ",data)
-                    visited_urls.add(url)
-    df=pd.DataFrame(data)
-    keyCountry=keyword.split()
-    df['country']=keyCountry[-1]
-    print(df)
-    return df
+            #if article_date.date() >= datetime.now().date():
+            images = row.find('img').get('src')
+            if url not in visited_urls and date not in visited_url_date:
+                des['source'] = source
+                des['link'] = url
+                des['title'] = title
+                des['date'] = date
+                des['image'] = images
+                data.append(des)
+                #print("data: ",data)
+                visited_urls.add(url)
+    # df=pd.DataFrame(data)
+    # keyCountry=keyword.split()
+    # df['country']=keyCountry[-1]
+    #print(df)
+    #return df
     
                     #print("+++",visited_urls)
 
-    today = datetime.today()
-    yesterday = today - timedelta(days=1)
-    yesterday = yesterday.strftime('%Y-%m-%d')
+    today = datetime.today().strftime('%Y-%m-%d')
+    # yesterday = today - timedelta(days=30)
+    # yesterday = yesterday.strftime('%Y-%m-%d')
     
 
     DATE = []  
@@ -174,13 +175,15 @@ def google_news_scraper(keyword):
         if modified_date:
             data1['Modified Dates'] = modified_date
             filtered_data.append(data1)
+            #print(filtered_data)
 
     filtered_data_final = []
     for data2 in filtered_data:
         if data2['Modified Dates']:
             modified_date = dateparser.parse(data2['Modified Dates'], date_formats=['%Y-%m-%d'])
             modified_date = modified_date.strftime('%Y-%m-%d')
-            if modified_date >= yesterday:
+            # if modified_date == today:
+            if modified_date == today:
                 filtered_data_final.append(data2)
                 print("filter dta : ",filtered_data_final)
     list1 = []
@@ -215,7 +218,10 @@ def google_news_scraper(keyword):
         if 'Fortune India: Business News, Strategy, Finance and Corporate ...' in item['source']:
             item['source'] = 'Fortune India'
     print("list1 :",list1)
-    #return list1
+    df=pd.DataFrame(list1)
+    keyCountry=keyword.split()
+    df['country']=keyCountry[-1]
+    return df
 
 def take_keyword():
     for relatedkeyword in related_keywords:

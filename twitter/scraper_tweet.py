@@ -52,9 +52,13 @@ def extract_countries(text):
     for word in words:
         word_lower = word.lower()
         if word_lower in [country.lower() for country in countries]:
-            mentioned_countries.append(word_lower.capitalize())  # Capitalize the first letter
+            country_name = word_lower.capitalize()  # Capitalize the first letter
+            if country_name not in mentioned_countries:
+                mentioned_countries.append(country_name)
         elif word_lower in [alias.lower() for alias in country_aliases.keys()]:
-            mentioned_countries.append(country_aliases[word_lower.lower()])
+            country_name = country_aliases[word_lower.lower()]
+            if country_name not in mentioned_countries:
+                mentioned_countries.append(country_name)
     return mentioned_countries
 
 #example
@@ -165,7 +169,7 @@ def twitter_search(keyword):
             
         if "text" in df.columns:
             df['country']=df['text'].apply(extract_countries)
-            df['country']=df["country"].apply(lambda x : ", ".join(x)) 
+            #df['country']=df["country"].apply(lambda x : ", ".join(x)) 
         else:
             df['country']=[]  
         if "user_screen_name" in df.columns:  
@@ -177,7 +181,8 @@ def twitter_search(keyword):
         return None 
     
     # Sort the DataFrame by username in decreasing order of reach
-    df = df.sort_values(by=['user_followers_count'], ascending=False)
+    if 'user_followers_count' in df.columns:
+        df.sort_values(by='user_followers_count', ascending=False,inplace=True)
 
     # print("by reach : ",df)
     
@@ -185,6 +190,7 @@ def twitter_search(keyword):
     print(df)
        
     return df #hashtags_count
+
     
 
 
