@@ -20,20 +20,20 @@ class PostTweets(APIView):
         related_keywords = [
             #"education",
             # # "health",
-            # "autism",
-            # "Asperger's syndrome",
-            # "Autism spectrum disorder (asd)",
-            # "Neurodevelopmental disorder",
-            # "Social communication",
-            # "Sensory processing",
-            # "Behavioral therapy"
-            # "Special education"
-            # "Early intervention","Genetic factors","Neurodiversity",
-            # "Social skills",
-            # "Cognitive deficits","Speech therapy","Pervasive developmental disorder (PDD)"
-            # ,"Executive function","Applied behavior analysis (ABA)","Communication difficulties","Repetitive behaviors","Hyperfocus",
-            # "Inclusion", 'Autism Spectrum Disorder', 'Pervasive Developmental Disorder','Autism Support', 'Autistic Children', 
-            # 'Special Needs', 'Developmental Disability' 
+            "Autism",
+            "Asperger's syndrome",
+            "Autism spectrum disorder (asd)",
+            "Neurodevelopmental disorder",
+            "Social communication",
+            "Sensory processing",
+            "Behavioral therapy"
+            "Special education"
+            "Early intervention","Genetic factors","Neurodiversity",
+            "Social skills",
+            "Cognitive deficits","Speech therapy","Pervasive developmental disorder (PDD)"
+            ,"Executive function","Applied behavior analysis (ABA)","Communication difficulties","Repetitive behaviors","Hyperfocus",
+            "Inclusion", 'Autism Spectrum Disorder', 'Pervasive Developmental Disorder','Autism Support', 'Autistic Children', 
+            'Special Needs', 'Developmental Disability', 
             'Learning Disability','Sensory Processing Disorder','Social Skills Training'
         ]
         # countries = ["india","Afganistan"]
